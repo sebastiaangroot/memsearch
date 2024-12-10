@@ -7,12 +7,12 @@ import binascii
 from subprocess import PIPE, Popen
 
 def get_mem(pid):
-  with open("/proc/{}/maps".format(pid), "r") as maps_file:
+  with open(f"/proc/{pid}/maps", "r") as maps_file:
     memmap = maps_file.readlines()
-  mem_file = open("/proc/{}/mem".format(pid), "rb", 0)
+  mem_file = open(f"/proc/{pid}/mem", "rb", 0)
   out_maps = {}
   for line in memmap:
-    m = re.match(r'([0-9A-Fa-f]+)-([0-9A-Fa-f]+) ([-r])', line)
+    m = re.match('([0-9A-Fa-f]+)-([0-9A-Fa-f]+) ([-r])', line)
     if m.group(3) == 'r':
       start = int(m.group(1), 16)
       end = int(m.group(2), 16)
@@ -21,22 +21,20 @@ def get_mem(pid):
         chunk = mem_file.read(end - start)
         out_maps[line.strip()] = chunk
       except:
-        #print('Could not read: %016x' % (pos,), file=sys.stderr)
         continue
   mem_file.close()
   return out_maps
 
 def get_proc_name(pid):
   assert(type(pid) == int)
-  with Popen('ps -q {} -o comm='.format(pid), shell=True, stdout=PIPE) as p:
+  with Popen(f'ps -q {pid} -o comm=', shell=True, stdout=PIPE) as p:
     return p.communicate()[0].decode().strip()
 
 def usage():
-  print('usage: {} <pid> <search_string>'.format(sys.argv[0]))
+  print(f'usage: {sys.argv[0]} <pid> <search_string>')
   print(' search_string formats:')
   print('  0xdeadbeef    - search for hex string "deadbeef"')
   print('  Lsearchstring - search for literal string "searchstring"')
-  print(sys.argv)
 
 
 def main():
@@ -67,7 +65,7 @@ def main():
     if idx >= 0:
       chunk_printable = re.sub(r'\s+', ' ', chunk)
       pname = get_proc_name(pid)
-      print('[!] string found in pid [{} - {}] at chunk [{}] at idx 0x{:02x}'.format(pid, pname, chunk_printable, idx))
+      print(f'[!] string found in pid [{pid} - {pname}] at chunk [{chunk_printable}] at idx 0x{idx:02x}')
 
 if __name__ == '__main__':
   main()

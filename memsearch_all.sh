@@ -8,6 +8,10 @@ if [ $# -ne 1 ]; then
   exit 1
 fi
 
+if [ $(id -u) -ne 0 ]; then
+  echo "[!] you probably want to run this as root" 1>&2
+fi
+
 PIDS=$(ps -eo pid | grep -oE "[0-9]+")
 for pid in $PIDS; do
   if [ -n "$pid" ]; then
